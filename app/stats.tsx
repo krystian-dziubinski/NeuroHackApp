@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, useWindowDimensions, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 interface Stats {
   totalTests: number;
@@ -174,6 +176,12 @@ export default function StatsScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.replace('/')}
+          >
+            <Ionicons name="chevron-back" size={32} color="white" />
+          </TouchableOpacity>
           <View style={styles.content}>
             <Text style={styles.message}>No test data available yet.</Text>
           </View>
@@ -190,6 +198,12 @@ export default function StatsScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.replace('/')}
+        >
+          <Ionicons name="chevron-back" size={32} color="white" />
+        </TouchableOpacity>
         <ScrollView style={styles.scrollView}>
           <View style={styles.content}>
             <Text style={styles.title}>Your Progress</Text>
@@ -451,5 +465,17 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

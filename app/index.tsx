@@ -53,13 +53,13 @@ export default function HomeScreen() {
           
           <Link href="/test" asChild>
             <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Start Hacking Your Brain 🧪</Text>
+              <Text style={styles.buttonText}>Start self-experimentation</Text>
             </TouchableOpacity>
           </Link>
           
           <Link href="/stats" asChild>
             <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Analyze Your Results 📊</Text>
+              <Text style={styles.buttonText}>Analyze your results</Text>
             </TouchableOpacity>
           </Link>
         </View>

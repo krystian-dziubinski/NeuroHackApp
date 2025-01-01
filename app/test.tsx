@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const emotions = [
   { label: 'Sad', key: 'sad' },
@@ -78,6 +79,12 @@ export default function TestScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={32} color="white" />
+          </TouchableOpacity>
           <View style={styles.content}>
             <Text style={styles.title}>Time for Intervention</Text>
             <Text style={styles.instructions}>
@@ -101,6 +108,12 @@ export default function TestScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={32} color="white" />
+        </TouchableOpacity>
         <ScrollView style={styles.scrollView}>
           <View style={styles.content}>
             <Text style={styles.title}>
@@ -232,5 +245,17 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
