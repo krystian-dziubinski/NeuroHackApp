@@ -2,37 +2,89 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, SafeAre
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
-import { SvgXml } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
-const logoXml = `
-  <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="10" width="30" height="30" fill="#3498db"/>
-    <circle cx="70" cy="30" r="15" fill="#e74c3c"/>
-    <polygon points="50,60 70,90 30,90" fill="#f1c40f"/>
-  </svg>
-`;
+const AnimatedLogo = () => {
+  const squareAnim = useRef(new Animated.Value(-100)).current;
+  const circleAnim = useRef(new Animated.Value(-100)).current;
+  const triangleAnim = useRef(new Animated.Value(-100)).current;
+
+  useEffect(() => {
+    Animated.stagger(50, [
+      Animated.spring(squareAnim, {
+        toValue: 0,
+        tension: 180,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+      Animated.spring(circleAnim, {
+        toValue: 0,
+        tension: 180,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+      Animated.spring(triangleAnim, {
+        toValue: 0,
+        tension: 180,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <View style={styles.logoContainer}>
+      <Animated.View
+        style={[
+          styles.shape,
+          styles.square,
+          {
+            transform: [{ translateY: squareAnim }],
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.shape,
+          styles.circle,
+          {
+            transform: [{ translateY: circleAnim }],
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.shape,
+          styles.triangle,
+          {
+            transform: [{ translateY: triangleAnim }],
+          },
+        ]}
+      />
+    </View>
+  );
+};
 
 const AnimatedGradient = () => {
   const fadeAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    const pulse = Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0.6,
-        duration: 2000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0.3,
-        duration: 2000,
-        useNativeDriver: true,
-      })
-    ]);
-
-    Animated.loop(pulse).start();
-  }, []);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0.7,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0.3,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [fadeAnim]);
 
   return (
     <Animated.View
@@ -58,7 +110,9 @@ export default function HomeScreen() {
         <SafeAreaView style={styles.safeArea}>
           <AnimatedGradient />
           <View style={styles.content}>
-            <SvgXml xml={logoXml} width="100" height="100" style={styles.logo} />
+            <View style={styles.logo}>
+              <AnimatedLogo />
+            </View>
             <Text style={styles.title}>Samba</Text>
             <Text style={styles.subtitle}>NeuroHack your brain</Text>
             
@@ -86,8 +140,6 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    width: '100%',
-    height: '100%',
   },
   safeArea: {
     flex: 1,
@@ -100,6 +152,43 @@ const styles = StyleSheet.create({
   },
   logo: {
     marginBottom: 20,
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    position: 'relative',
+  },
+  shape: {
+    position: 'absolute',
+  },
+  square: {
+    width: 30,
+    height: 30,
+    backgroundColor: '#3498db',
+    left: 10,
+    top: 10,
+  },
+  circle: {
+    width: 30,
+    height: 30,
+    backgroundColor: '#e74c3c',
+    borderRadius: 15,
+    left: 55,
+    top: 15,
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 20,
+    borderRightWidth: 20,
+    borderBottomWidth: 30,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#f1c40f',
+    left: 30,
+    top: 60,
   },
   title: {
     fontSize: 42,
