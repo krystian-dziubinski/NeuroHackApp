@@ -215,7 +215,7 @@ export default function StatsScreen() {
           </View>
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
             <View style={styles.content}>
-              <Text style={styles.title}>Your Progress</Text>
+              <Text style={styles.title}>Results</Text>
               <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
 
               {stats?.timeSeriesData && (
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 42,
+    fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#ffffff',

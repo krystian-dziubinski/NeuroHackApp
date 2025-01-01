@@ -60,7 +60,7 @@ export default function HomeScreen() {
           <View style={styles.content}>
             <SvgXml xml={logoXml} width="100" height="100" style={styles.logo} />
             <Text style={styles.title}>Samba</Text>
-            <Text style={styles.subtitle}>NeuroHack your brain 🧠</Text>
+            <Text style={styles.subtitle}>NeuroHack your brain</Text>
             
             <Link href="/test" asChild>
               <TouchableOpacity style={styles.button}>
