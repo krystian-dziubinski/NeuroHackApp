@@ -2,8 +2,17 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from '
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
+import { SvgXml } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
+
+const logoXml = `
+  <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="30" height="30" fill="#3498db"/>
+    <circle cx="70" cy="30" r="15" fill="#e74c3c"/>
+    <polygon points="50,60 70,90 30,90" fill="#f1c40f"/>
+  </svg>
+`;
 
 const AnimatedGradient = () => {
   const fadeAnim = useRef(new Animated.Value(0.3)).current;
@@ -48,6 +57,7 @@ export default function HomeScreen() {
       >
         <AnimatedGradient />
         <View style={styles.content}>
+          <SvgXml xml={logoXml} width="100" height="100" style={styles.logo} />
           <Text style={styles.title}>Samba</Text>
           <Text style={styles.subtitle}>NeuroHack your brain 🧠</Text>
           
@@ -82,6 +92,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+  },
+  logo: {
+    marginBottom: 20,
   },
   title: {
     fontSize: 42,
