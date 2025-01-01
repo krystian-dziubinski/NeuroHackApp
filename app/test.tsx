@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const emotions = [
   { label: 'Sad', key: 'sad' },
@@ -71,65 +72,113 @@ export default function TestScreen() {
   if (stage === 'intervention') {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Time for Intervention</Text>
-        <Text style={styles.instructions}>
-          Take a moment to watch an uplifting video or do a calming activity of your choice.
-          When you're ready, proceed to rate your emotions again.
-        </Text>
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>I'm Ready</Text>
-        </TouchableOpacity>
+        <LinearGradient
+          colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        >
+          <View style={styles.content}>
+            <Text style={styles.title}>Time for Intervention</Text>
+            <Text style={styles.instructions}>
+              Take a moment to watch an uplifting video or do a calming activity of your choice.
+              When you're ready, proceed to rate your emotions again.
+            </Text>
+            <TouchableOpacity style={styles.button} onPress={handleNext}>
+              <Text style={styles.buttonText}>I'm Ready</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>
-        {stage === 'pre' ? 'How do you feel right now?' : 'How do you feel after the intervention?'}
-      </Text>
-      
-      {emotions.map((emotion) => (
-        <View key={emotion.key} style={styles.emotionContainer}>
-          <Text style={styles.emotionText}>{emotion.label}</Text>
-          {renderRatingButtons(emotion)}
-        </View>
-      ))}
-
-      <TouchableOpacity 
-        style={[styles.button, !Object.keys(ratings).length && styles.buttonDisabled]}
-        onPress={handleNext}
-        disabled={!Object.keys(ratings).length}
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
       >
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.content}>
+            <Text style={styles.title}>
+              {stage === 'pre' ? 'How do you feel right now?' : 'How do you feel after the intervention?'}
+            </Text>
+            
+            {emotions.map((emotion) => (
+              <View key={emotion.key} style={styles.emotionContainer}>
+                <Text style={styles.emotionText}>{emotion.label}</Text>
+                {renderRatingButtons(emotion)}
+              </View>
+            ))}
+
+            <TouchableOpacity 
+              style={[styles.button, !Object.keys(ratings).length && styles.buttonDisabled]}
+              onPress={handleNext}
+              disabled={!Object.keys(ratings).length}
+            >
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  gradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 42,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#ffffff',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
   instructions: {
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 24,
+    marginBottom: 30,
+    lineHeight: 28,
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   emotionContainer: {
-    marginBottom: 20,
+    marginBottom: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 15,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   emotionText: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 24,
+    marginBottom: 15,
+    color: '#ffffff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -140,34 +189,48 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   selectedRating: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   ratingText: {
-    fontSize: 18,
-    color: '#000',
+    fontSize: 20,
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   selectedRatingText: {
-    color: '#fff',
+    color: '#1a2a6c',
+    textShadowColor: 'rgba(255, 255, 255, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     marginTop: 20,
     marginBottom: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   buttonText: {
     color: 'white',
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

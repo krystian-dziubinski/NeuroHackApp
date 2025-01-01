@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart, BarChart } from 'react-native-chart-kit';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Stats {
   totalTests: number;
@@ -167,166 +168,209 @@ export default function StatsScreen() {
   if (!stats) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>No test data available yet.</Text>
+        <LinearGradient
+          colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}
+        >
+          <View style={styles.content}>
+            <Text style={styles.message}>No test data available yet.</Text>
+          </View>
+        </LinearGradient>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Your Progress</Text>
-      <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Your Progress</Text>
+            <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
 
-      {stats?.timeSeriesData && (
-        <>
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
-            <LineChart
-              data={{
-                labels: stats.timeSeriesData.labels || [],
-                datasets: [
-                  {
-                    data: stats.timeSeriesData.positive || [],
-                    color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-                    strokeWidth: 2,
-                  },
-                  {
-                    data: stats.timeSeriesData.negative || [],
-                    color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
-                    strokeWidth: 2,
-                  },
-                  {
-                    data: stats.timeSeriesData.overall || [],
-                    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-                    strokeWidth: 2,
-                  },
-                ],
-              }}
-              width={width - 40}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={styles.chart}
-            />
-            <View style={styles.legendContainer}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
-                <Text>Positive</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
-                <Text>Negative</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
-                <Text>Overall</Text>
-              </View>
-            </View>
-          </View>
+            {stats?.timeSeriesData && (
+              <>
+                <View style={styles.chartContainer}>
+                  <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
+                  <LineChart
+                    data={{
+                      labels: stats.timeSeriesData.labels || [],
+                      datasets: [
+                        {
+                          data: stats.timeSeriesData.positive || [],
+                          color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
+                          strokeWidth: 2,
+                        },
+                        {
+                          data: stats.timeSeriesData.negative || [],
+                          color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
+                          strokeWidth: 2,
+                        },
+                        {
+                          data: stats.timeSeriesData.overall || [],
+                          color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
+                          strokeWidth: 2,
+                        },
+                      ],
+                    }}
+                    width={width - 40}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                  />
+                  <View style={styles.legendContainer}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
+                      <Text style={styles.legendText}>Positive</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
+                      <Text style={styles.legendText}>Negative</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
+                      <Text style={styles.legendText}>Overall</Text>
+                    </View>
+                  </View>
+                </View>
 
-          {stats.timeSeriesData.emotions && Object.entries(stats.timeSeriesData.emotions).map(([emotion, data]) => (
-            <View key={emotion} style={styles.chartContainer}>
-              <Text style={styles.chartTitle}>
-                {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Changes
-              </Text>
-              <LineChart
+                {stats.timeSeriesData.emotions && Object.entries(stats.timeSeriesData.emotions).map(([emotion, data]) => (
+                  <View key={emotion} style={styles.chartContainer}>
+                    <Text style={styles.chartTitle}>
+                      {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Changes
+                    </Text>
+                    <LineChart
+                      data={{
+                        labels: stats.timeSeriesData.labels || [],
+                        datasets: [
+                          {
+                            data: data || [],
+                            color: (opacity = 1) => {
+                              const colors = {
+                                happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                                anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                              };
+                              return colors[emotion as keyof typeof colors];
+                            },
+                            strokeWidth: 2,
+                          },
+                        ],
+                      }}
+                      width={width - 40}
+                      height={180}
+                      chartConfig={{
+                        ...chartConfig,
+                        color: (opacity = 1) => {
+                          const colors = {
+                            happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                            calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                            sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                            anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                          };
+                          return colors[emotion as keyof typeof colors];
+                        },
+                      }}
+                      bezier
+                      style={styles.chart}
+                    />
+                  </View>
+                ))}
+              </>
+            )}
+
+            <View style={styles.statsContainer}>
+              <Text style={styles.sectionTitle}>Average Improvements</Text>
+              <BarChart
                 data={{
-                  labels: stats.timeSeriesData.labels || [],
-                  datasets: [
-                    {
-                      data: data || [],
-                      color: (opacity = 1) => {
-                        const colors = {
-                          happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                          calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
-                          sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                          anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
-                        };
-                        return colors[emotion as keyof typeof colors];
-                      },
-                      strokeWidth: 2,
-                    },
-                  ],
+                  labels: Object.keys(stats.averageImprovement || {}).map(key => 
+                    key.charAt(0).toUpperCase() + key.slice(1)
+                  ),
+                  datasets: [{
+                    data: Object.values(stats.averageImprovement || {}).map(Number)
+                  }]
                 }}
                 width={width - 40}
-                height={180}
+                height={220}
                 chartConfig={{
                   ...chartConfig,
                   color: (opacity = 1) => {
-                    const colors = {
-                      happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                      calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
-                      sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                      anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
-                    };
-                    return colors[emotion as keyof typeof colors];
+                    return `rgba(52, 152, 219, ${opacity})`;
                   },
                 }}
-                bezier
                 style={styles.chart}
+                showValuesOnTopOfBars
               />
             </View>
-          ))}
-        </>
-      )}
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>Average Improvements</Text>
-        <BarChart
-          data={{
-            labels: Object.keys(stats.averageImprovement || {}).map(key => 
-              key.charAt(0).toUpperCase() + key.slice(1)
-            ),
-            datasets: [{
-              data: Object.values(stats.averageImprovement || {}).map(Number)
-            }]
-          }}
-          width={width - 40}
-          height={220}
-          chartConfig={{
-            ...chartConfig,
-            color: (opacity = 1) => {
-              return `rgba(52, 152, 219, ${opacity})`;
-            },
-          }}
-          style={styles.chart}
-          showValuesOnTopOfBars
-        />
-      </View>
-
-      <Text style={styles.note}>
-        Positive values indicate improvement in positive emotions or reduction in negative emotions.
-      </Text>
-    </ScrollView>
+            <Text style={styles.note}>
+              Positive values indicate improvement in positive emotions or reduction in negative emotions.
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  gradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 42,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 20,
+    fontSize: 20,
+    color: '#ffffff',
+    marginBottom: 40,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    textAlign: 'center',
   },
   message: {
-    fontSize: 18,
+    fontSize: 20,
+    color: '#ffffff',
     textAlign: 'center',
-    marginTop: 20,
-    color: '#666',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   chartContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 15,
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -341,6 +385,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 15,
     textAlign: 'center',
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   chart: {
     marginVertical: 8,
@@ -350,6 +398,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 10,
   },
   legendItem: {
     flexDirection: 'row',
@@ -361,11 +412,17 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginRight: 6,
   },
+  legendText: {
+    color: '#ffffff',
+    fontSize: 12,
+  },
   statsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 15,
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -380,12 +437,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 15,
     textAlign: 'center',
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   note: {
     fontSize: 14,
-    color: '#666',
+    color: '#ffffff',
     fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
