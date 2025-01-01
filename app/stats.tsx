@@ -43,9 +43,32 @@ export default function StatsScreen() {
     
     // Sort tests by timestamp
     const sortedTests = tests.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    // Format dates in a more readable way
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      // If test is from today, show "Today"
+      if (date.toDateString() === new Date().toDateString()) {
+        return 'Today';
+      }
+      // If test is from yesterday, show "Yesterday"
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+      }
+      // For other dates within the last week, show day name
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      if (date > weekAgo) {
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+      }
+      // For older dates, show month and day
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
     
     const timeSeriesData = {
-      labels: sortedTests.map(test => new Date(test.timestamp).toLocaleDateString()),
+      labels: sortedTests.map(test => formatDate(test.timestamp)),
       positive: [],
       negative: [],
       overall: [],
