@@ -4,18 +4,18 @@ import { Link } from 'expo-router';
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>NeuroHack</Text>
-      <Text style={styles.subtitle}>Track Your Emotional States</Text>
+      <Text style={styles.title}>Samba</Text>
+      <Text style={styles.subtitle}>NeuroHack your brain 🧠</Text>
       
       <Link href="/test" asChild>
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Start New Test</Text>
+          <Text style={styles.buttonText}>Start Hacking Your Brain 🧪</Text>
         </TouchableOpacity>
       </Link>
       
       <Link href="/stats" asChild>
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>View Statistics</Text>
+          <Text style={styles.buttonText}>Analyze Your Results 📊</Text>
         </TouchableOpacity>
       </Link>
     </View>

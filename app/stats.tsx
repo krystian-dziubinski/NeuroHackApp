@@ -11,8 +11,16 @@ interface Stats {
     positive: number[];
     negative: number[];
     overall: number[];
+    emotions: {
+      happy: number[];
+      calm: number[];
+      sad: number[];
+      anxious: number[];
+    };
   };
 }
+
+type Emotion = 'happy' | 'calm' | 'sad' | 'anxious';
 
 export default function StatsScreen() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -38,8 +46,9 @@ export default function StatsScreen() {
   const calculateStats = (tests: any[]): Stats | null => {
     if (!tests.length) return null;
 
-    const positiveEmotions = ['happy', 'calm'];
-    const negativeEmotions = ['sad', 'anxious'];
+    const positiveEmotions: Emotion[] = ['happy', 'calm'];
+    const negativeEmotions: Emotion[] = ['sad', 'anxious'];
+    const emotions: Emotion[] = ['happy', 'calm', 'sad', 'anxious'];
     
     // Sort tests by timestamp
     const sortedTests = tests.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -72,12 +81,27 @@ export default function StatsScreen() {
       positive: [],
       negative: [],
       overall: [],
+      emotions: {
+        happy: [],
+        calm: [],
+        sad: [],
+        anxious: [],
+      },
     };
 
     // Calculate averages for each test
     sortedTests.forEach(test => {
       let positiveChange = 0;
       let negativeChange = 0;
+
+      emotions.forEach(emotion => {
+        const pre = test[`pre_${emotion}`] || 0;
+        const post = test[`post_${emotion}`] || 0;
+        const change = ['sad', 'anxious'].includes(emotion) ? 
+          (pre - post) : // Inverted for negative emotions
+          (post - pre);
+        timeSeriesData.emotions[emotion].push(Number(change.toFixed(2)));
+      });
 
       positiveEmotions.forEach(emotion => {
         const pre = test[`pre_${emotion}`] || 0;
@@ -88,7 +112,7 @@ export default function StatsScreen() {
       negativeEmotions.forEach(emotion => {
         const pre = test[`pre_${emotion}`] || 0;
         const post = test[`post_${emotion}`] || 0;
-        negativeChange += pre - post; // Inverted for negative emotions
+        negativeChange += pre - post;
       });
 
       const positiveAvg = positiveChange / positiveEmotions.length;
@@ -151,62 +175,110 @@ export default function StatsScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Your Progress</Text>
-      <Text style={styles.subtitle}>Total Tests: {stats.totalTests}</Text>
+      <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
 
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
-        <LineChart
-          data={{
-            labels: stats.timeSeriesData.labels,
-            datasets: [
-              {
-                data: stats.timeSeriesData.positive,
-                color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-                strokeWidth: 2,
-              },
-              {
-                data: stats.timeSeriesData.negative,
-                color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
-                strokeWidth: 2,
-              },
-              {
-                data: stats.timeSeriesData.overall,
-                color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-                strokeWidth: 2,
-              },
-            ],
-          }}
-          width={width - 40}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={styles.chart}
-        />
-        <View style={styles.legendContainer}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
-            <Text>Positive</Text>
+      {stats?.timeSeriesData && (
+        <>
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
+            <LineChart
+              data={{
+                labels: stats.timeSeriesData.labels || [],
+                datasets: [
+                  {
+                    data: stats.timeSeriesData.positive || [],
+                    color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
+                    strokeWidth: 2,
+                  },
+                  {
+                    data: stats.timeSeriesData.negative || [],
+                    color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
+                    strokeWidth: 2,
+                  },
+                  {
+                    data: stats.timeSeriesData.overall || [],
+                    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
+                    strokeWidth: 2,
+                  },
+                ],
+              }}
+              width={width - 40}
+              height={220}
+              chartConfig={chartConfig}
+              bezier
+              style={styles.chart}
+            />
+            <View style={styles.legendContainer}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
+                <Text>Positive</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
+                <Text>Negative</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
+                <Text>Overall</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
-            <Text>Negative</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
-            <Text>Overall</Text>
-          </View>
-        </View>
-      </View>
+
+          {stats.timeSeriesData.emotions && Object.entries(stats.timeSeriesData.emotions).map(([emotion, data]) => (
+            <View key={emotion} style={styles.chartContainer}>
+              <Text style={styles.chartTitle}>
+                {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Changes
+              </Text>
+              <LineChart
+                data={{
+                  labels: stats.timeSeriesData.labels || [],
+                  datasets: [
+                    {
+                      data: data || [],
+                      color: (opacity = 1) => {
+                        const colors = {
+                          happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                          calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                          sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                          anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                        };
+                        return colors[emotion as keyof typeof colors];
+                      },
+                      strokeWidth: 2,
+                    },
+                  ],
+                }}
+                width={width - 40}
+                height={180}
+                chartConfig={{
+                  ...chartConfig,
+                  color: (opacity = 1) => {
+                    const colors = {
+                      happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                      calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                      sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                      anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                    };
+                    return colors[emotion as keyof typeof colors];
+                  },
+                }}
+                bezier
+                style={styles.chart}
+              />
+            </View>
+          ))}
+        </>
+      )}
 
       <View style={styles.statsContainer}>
         <Text style={styles.sectionTitle}>Average Improvements</Text>
         <BarChart
           data={{
-            labels: Object.keys(stats.averageImprovement).map(key => 
+            labels: Object.keys(stats.averageImprovement || {}).map(key => 
               key.charAt(0).toUpperCase() + key.slice(1)
             ),
             datasets: [{
-              data: Object.values(stats.averageImprovement).map(Number)
+              data: Object.values(stats.averageImprovement || {}).map(Number)
             }]
           }}
           width={width - 40}
