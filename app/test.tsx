@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -79,22 +79,28 @@ export default function TestScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={32} color="white" />
-          </TouchableOpacity>
-          <View style={styles.content}>
-            <Text style={styles.title}>Time for Intervention</Text>
-            <Text style={styles.instructions}>
-              Take a moment to watch an uplifting video or do a calming activity of your choice.
-              When you're ready, proceed to rate your emotions again.
-            </Text>
-            <TouchableOpacity style={styles.button} onPress={handleNext}>
-              <Text style={styles.buttonText}>I'm Ready</Text>
-            </TouchableOpacity>
-          </View>
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.headerContainer}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => router.back()}
+              >
+                <Ionicons name="chevron-back" size={32} color="white" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+              <View style={styles.content}>
+                <Text style={styles.title}>Time for Intervention</Text>
+                <Text style={styles.instructions}>
+                  Take a moment to watch an uplifting video or do a calming activity of your choice.
+                  When you're ready, proceed to rate your emotions again.
+                </Text>
+                <TouchableOpacity style={styles.button} onPress={handleNext}>
+                  <Text style={styles.buttonText}>I'm Ready</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
         </LinearGradient>
       </View>
     );
@@ -108,34 +114,38 @@ export default function TestScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={32} color="white" />
-        </TouchableOpacity>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.content}>
-            <Text style={styles.title}>
-              {stage === 'pre' ? 'How do you feel right now?' : 'How do you feel after the intervention?'}
-            </Text>
-            
-            {emotions.map((emotion) => (
-              <View key={emotion.key} style={styles.emotionContainer}>
-                <Text style={styles.emotionText}>{emotion.label}</Text>
-                {renderRatingButtons(emotion)}
-              </View>
-            ))}
-
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.headerContainer}>
             <TouchableOpacity 
-              style={[styles.button, !Object.keys(ratings).length && styles.buttonDisabled]}
-              onPress={handleNext}
-              disabled={!Object.keys(ratings).length}
+              style={styles.backButton}
+              onPress={() => router.back()}
             >
-              <Text style={styles.buttonText}>Next</Text>
+              <Ionicons name="chevron-back" size={32} color="white" />
             </TouchableOpacity>
           </View>
-        </ScrollView>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.content}>
+              <Text style={styles.title}>
+                {stage === 'pre' ? 'How do you feel right now?' : 'How do you feel after the intervention?'}
+              </Text>
+              
+              {emotions.map((emotion) => (
+                <View key={emotion.key} style={styles.emotionContainer}>
+                  <Text style={styles.emotionText}>{emotion.label}</Text>
+                  {renderRatingButtons(emotion)}
+                </View>
+              ))}
+
+              <TouchableOpacity 
+                style={[styles.button, !Object.keys(ratings).length && styles.buttonDisabled]}
+                onPress={handleNext}
+                disabled={!Object.keys(ratings).length}
+              >
+                <Text style={styles.buttonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       </LinearGradient>
     </View>
   );
@@ -147,14 +157,34 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  headerContainer: {
+    height: 60,
+    justifyContent: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
   content: {
-    padding: 20,
+    flex: 1,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   title: {
     fontSize: 42,
@@ -245,17 +275,5 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 1,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

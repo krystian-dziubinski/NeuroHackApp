@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, SafeAreaView } from 'react-native';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
@@ -55,24 +55,26 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <AnimatedGradient />
-        <View style={styles.content}>
-          <SvgXml xml={logoXml} width="100" height="100" style={styles.logo} />
-          <Text style={styles.title}>Samba</Text>
-          <Text style={styles.subtitle}>NeuroHack your brain 🧠</Text>
-          
-          <Link href="/test" asChild>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Start self-experimentation</Text>
-            </TouchableOpacity>
-          </Link>
-          
-          <Link href="/stats" asChild>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Analyze your results</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+          <AnimatedGradient />
+          <View style={styles.content}>
+            <SvgXml xml={logoXml} width="100" height="100" style={styles.logo} />
+            <Text style={styles.title}>Samba</Text>
+            <Text style={styles.subtitle}>NeuroHack your brain 🧠</Text>
+            
+            <Link href="/test" asChild>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Start self-experimentation</Text>
+              </TouchableOpacity>
+            </Link>
+            
+            <Link href="/stats" asChild>
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>Analyze your results</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        </SafeAreaView>
       </LinearGradient>
     </View>
   );
@@ -86,6 +88,9 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  safeArea: {
+    flex: 1,
   },
   content: {
     flex: 1,

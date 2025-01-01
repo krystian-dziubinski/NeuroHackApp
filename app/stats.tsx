@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, useWindowDimensions, TouchableOpacity, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -176,15 +176,21 @@ export default function StatsScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.replace('/')}
-          >
-            <Ionicons name="chevron-back" size={32} color="white" />
-          </TouchableOpacity>
-          <View style={styles.content}>
-            <Text style={styles.message}>No test data available yet.</Text>
-          </View>
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.headerContainer}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => router.replace('/')}
+              >
+                <Ionicons name="chevron-back" size={32} color="white" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+              <View style={styles.content}>
+                <Text style={styles.message}>No test data available yet.</Text>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
         </LinearGradient>
       </View>
     );
@@ -198,139 +204,143 @@ export default function StatsScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.replace('/')}
-        >
-          <Ionicons name="chevron-back" size={32} color="white" />
-        </TouchableOpacity>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Your Progress</Text>
-            <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.replace('/')}
+            >
+              <Ionicons name="chevron-back" size={32} color="white" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.content}>
+              <Text style={styles.title}>Your Progress</Text>
+              <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
 
-            {stats?.timeSeriesData && (
-              <>
-                <View style={styles.chartContainer}>
-                  <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
-                  <LineChart
-                    data={{
-                      labels: stats.timeSeriesData.labels || [],
-                      datasets: [
-                        {
-                          data: stats.timeSeriesData.positive || [],
-                          color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-                          strokeWidth: 2,
-                        },
-                        {
-                          data: stats.timeSeriesData.negative || [],
-                          color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
-                          strokeWidth: 2,
-                        },
-                        {
-                          data: stats.timeSeriesData.overall || [],
-                          color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-                          strokeWidth: 2,
-                        },
-                      ],
-                    }}
-                    width={width - 40}
-                    height={220}
-                    chartConfig={chartConfig}
-                    bezier
-                    style={styles.chart}
-                  />
-                  <View style={styles.legendContainer}>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
-                      <Text style={styles.legendText}>Positive</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
-                      <Text style={styles.legendText}>Negative</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
-                      <Text style={styles.legendText}>Overall</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {stats.timeSeriesData.emotions && Object.entries(stats.timeSeriesData.emotions).map(([emotion, data]) => (
-                  <View key={emotion} style={styles.chartContainer}>
-                    <Text style={styles.chartTitle}>
-                      {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Changes
-                    </Text>
+              {stats?.timeSeriesData && (
+                <>
+                  <View style={styles.chartContainer}>
+                    <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
                     <LineChart
                       data={{
                         labels: stats.timeSeriesData.labels || [],
                         datasets: [
                           {
-                            data: data || [],
-                            color: (opacity = 1) => {
-                              const colors = {
-                                happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                                calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
-                                sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                                anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
-                              };
-                              return colors[emotion as keyof typeof colors];
-                            },
+                            data: stats.timeSeriesData.positive || [],
+                            color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
+                            strokeWidth: 2,
+                          },
+                          {
+                            data: stats.timeSeriesData.negative || [],
+                            color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
+                            strokeWidth: 2,
+                          },
+                          {
+                            data: stats.timeSeriesData.overall || [],
+                            color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
                             strokeWidth: 2,
                           },
                         ],
                       }}
                       width={width - 40}
-                      height={180}
-                      chartConfig={{
-                        ...chartConfig,
-                        color: (opacity = 1) => {
-                          const colors = {
-                            happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                            calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
-                            sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                            anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
-                          };
-                          return colors[emotion as keyof typeof colors];
-                        },
-                      }}
+                      height={220}
+                      chartConfig={chartConfig}
                       bezier
                       style={styles.chart}
                     />
+                    <View style={styles.legendContainer}>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendColor, { backgroundColor: '#2ecc71' }]} />
+                        <Text style={styles.legendText}>Positive</Text>
+                      </View>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendColor, { backgroundColor: '#e74c3c' }]} />
+                        <Text style={styles.legendText}>Negative</Text>
+                      </View>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendColor, { backgroundColor: '#3498db' }]} />
+                        <Text style={styles.legendText}>Overall</Text>
+                      </View>
+                    </View>
                   </View>
-                ))}
-              </>
-            )}
 
-            <View style={styles.statsContainer}>
-              <Text style={styles.sectionTitle}>Average Improvements</Text>
-              <BarChart
-                data={{
-                  labels: Object.keys(stats.averageImprovement || {}).map(key => 
-                    key.charAt(0).toUpperCase() + key.slice(1)
-                  ),
-                  datasets: [{
-                    data: Object.values(stats.averageImprovement || {}).map(Number)
-                  }]
-                }}
-                width={width - 40}
-                height={220}
-                chartConfig={{
-                  ...chartConfig,
-                  color: (opacity = 1) => {
-                    return `rgba(52, 152, 219, ${opacity})`;
-                  },
-                }}
-                style={styles.chart}
-                showValuesOnTopOfBars
-              />
+                  {stats.timeSeriesData.emotions && Object.entries(stats.timeSeriesData.emotions).map(([emotion, data]) => (
+                    <View key={emotion} style={styles.chartContainer}>
+                      <Text style={styles.chartTitle}>
+                        {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Changes
+                      </Text>
+                      <LineChart
+                        data={{
+                          labels: stats.timeSeriesData.labels || [],
+                          datasets: [
+                            {
+                              data: data || [],
+                              color: (opacity = 1) => {
+                                const colors = {
+                                  happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                  calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                  sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                                  anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                                };
+                                return colors[emotion as keyof typeof colors];
+                              },
+                              strokeWidth: 2,
+                            },
+                          ],
+                        }}
+                        width={width - 40}
+                        height={180}
+                        chartConfig={{
+                          ...chartConfig,
+                          color: (opacity = 1) => {
+                            const colors = {
+                              happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                              calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                              sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                              anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                            };
+                            return colors[emotion as keyof typeof colors];
+                          },
+                        }}
+                        bezier
+                        style={styles.chart}
+                      />
+                    </View>
+                  ))}
+                </>
+              )}
+
+              <View style={styles.statsContainer}>
+                <Text style={styles.sectionTitle}>Average Improvements</Text>
+                <BarChart
+                  data={{
+                    labels: Object.keys(stats.averageImprovement || {}).map(key => 
+                      key.charAt(0).toUpperCase() + key.slice(1)
+                    ),
+                    datasets: [{
+                      data: Object.values(stats.averageImprovement || {}).map(Number)
+                    }]
+                  }}
+                  width={width - 40}
+                  height={220}
+                  chartConfig={{
+                    ...chartConfig,
+                    color: (opacity = 1) => {
+                      return `rgba(52, 152, 219, ${opacity})`;
+                    },
+                  }}
+                  style={styles.chart}
+                  showValuesOnTopOfBars
+                />
+              </View>
+
+              <Text style={styles.note}>
+                Positive values indicate improvement in positive emotions or reduction in negative emotions.
+              </Text>
             </View>
-
-            <Text style={styles.note}>
-              Positive values indicate improvement in positive emotions or reduction in negative emotions.
-            </Text>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </SafeAreaView>
       </LinearGradient>
     </View>
   );
@@ -342,14 +352,34 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  headerContainer: {
+    height: 60,
+    justifyContent: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
   content: {
-    padding: 20,
+    flex: 1,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   title: {
     fontSize: 42,
@@ -465,17 +495,5 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 1,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
