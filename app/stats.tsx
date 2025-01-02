@@ -8,7 +8,6 @@ import { router } from 'expo-router';
 
 interface Stats {
   totalTests: number;
-  averageImprovement: Record<string, string>;
   timeSeriesData: {
     labels: string[];
     positive: number[];
@@ -25,135 +24,198 @@ interface Stats {
 
 type Emotion = 'happy' | 'calm' | 'sad' | 'anxious';
 
+type TimeFilter = 'day' | 'week' | 'month' | 'year';
+
+interface TestData {
+  timestamp: number;
+  emotions: {
+    happy: number;
+    calm: number;
+    sad: number;
+    anxious: number;
+  };
+  pre: {
+    happy: number;
+    calm: number;
+    sad: number;
+    anxious: number;
+  };
+  post: {
+    happy: number;
+    calm: number;
+    sad: number;
+    anxious: number;
+  };
+}
+
+const aggregateData = (data: TestData[], filter: TimeFilter) => {
+  const now = new Date();
+  let filteredData: TestData[] = [];
+  let aggregationPeriod = 1; // in days
+
+  switch (filter) {
+    case 'day':
+      // Only today's data
+      filteredData = data.filter(item => {
+        const date = new Date(item.timestamp);
+        return date.toDateString() === now.toDateString();
+      });
+      break;
+    case 'week':
+      // Last 7 days, aggregate by day
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      filteredData = data.filter(item => new Date(item.timestamp) >= weekAgo);
+      aggregationPeriod = 1;
+      break;
+    case 'month':
+      // Last 31 days, aggregate by 3 days
+      const monthAgo = new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000);
+      filteredData = data.filter(item => new Date(item.timestamp) >= monthAgo);
+      aggregationPeriod = 3;
+      break;
+    case 'year':
+      // Last 365 days, aggregate by month
+      const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      filteredData = data.filter(item => new Date(item.timestamp) >= yearAgo);
+      aggregationPeriod = 30;
+      break;
+  }
+
+  if (filter === 'day') return filteredData;
+
+  // Group data by aggregation period
+  const groupedData: { [key: string]: TestData[] } = {};
+  filteredData.forEach(item => {
+    const date = new Date(item.timestamp);
+    const periodKey = Math.floor(date.getTime() / (aggregationPeriod * 24 * 60 * 60 * 1000));
+    if (!groupedData[periodKey]) groupedData[periodKey] = [];
+    groupedData[periodKey].push(item);
+  });
+
+  // Aggregate data for each period
+  return Object.entries(groupedData).map(([key, items]) => {
+    const avgEmotions: { happy: number; calm: number; sad: number; anxious: number } = {
+      happy: 0,
+      calm: 0,
+      sad: 0,
+      anxious: 0,
+    };
+    const avgPre: { happy: number; calm: number; sad: number; anxious: number } = {
+      happy: 0,
+      calm: 0,
+      sad: 0,
+      anxious: 0,
+    };
+    const avgPost: { happy: number; calm: number; sad: number; anxious: number } = {
+      happy: 0,
+      calm: 0,
+      sad: 0,
+      anxious: 0,
+    };
+
+    items.forEach(item => {
+      avgEmotions.happy += item.emotions.happy / items.length;
+      avgEmotions.calm += item.emotions.calm / items.length;
+      avgEmotions.sad += item.emotions.sad / items.length;
+      avgEmotions.anxious += item.emotions.anxious / items.length;
+      avgPre.happy += item.pre.happy / items.length;
+      avgPre.calm += item.pre.calm / items.length;
+      avgPre.sad += item.pre.sad / items.length;
+      avgPre.anxious += item.pre.anxious / items.length;
+      avgPost.happy += item.post.happy / items.length;
+      avgPost.calm += item.post.calm / items.length;
+      avgPost.sad += item.post.sad / items.length;
+      avgPost.anxious += item.post.anxious / items.length;
+    });
+
+    return {
+      timestamp: Number(key) * aggregationPeriod * 24 * 60 * 60 * 1000,
+      emotions: avgEmotions,
+      pre: avgPre,
+      post: avgPost,
+    };
+  });
+};
+
+const formatDate = (timestamp: number, filter: TimeFilter) => {
+  const date = new Date(timestamp);
+  switch (filter) {
+    case 'day':
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    case 'week':
+      return date.toLocaleDateString([], { weekday: 'short' });
+    case 'month':
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    case 'year':
+      return date.toLocaleDateString([], { month: 'short' });
+  }
+};
+
 export default function StatsScreen() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
   const { width } = useWindowDimensions();
 
   useEffect(() => {
     loadStats();
-  }, []);
+  }, [timeFilter]);
 
   const loadStats = async () => {
     try {
-      const data = await AsyncStorage.getItem('testResults');
-      if (data) {
-        const tests = JSON.parse(data);
-        const calculatedStats = calculateStats(tests);
-        setStats(calculatedStats);
+      const testsString = await AsyncStorage.getItem('tests');
+      if (!testsString) {
+        setStats(null);
+        return;
       }
+
+      const tests: TestData[] = JSON.parse(testsString);
+      if (!Array.isArray(tests) || tests.length === 0) {
+        setStats(null);
+        return;
+      }
+
+      const aggregatedData = aggregateData(tests, timeFilter);
+      if (aggregatedData.length === 0) {
+        setStats(null);
+        return;
+      }
+
+      // Process aggregated data for charts
+      const timeSeriesData = {
+        labels: aggregatedData.map(item => formatDate(item.timestamp, timeFilter)),
+        positive: aggregatedData.map(item => {
+          const happy = item.emotions.happy || 0;
+          const calm = item.emotions.calm || 0;
+          return happy + calm;
+        }),
+        negative: aggregatedData.map(item => {
+          const sad = item.emotions.sad || 0;
+          const anxious = item.emotions.anxious || 0;
+          return -(sad + anxious);
+        }),
+        overall: aggregatedData.map(item => {
+          const happy = item.emotions.happy || 0;
+          const calm = item.emotions.calm || 0;
+          const sad = item.emotions.sad || 0;
+          const anxious = item.emotions.anxious || 0;
+          return (happy + calm) - (sad + anxious);
+        }),
+        emotions: {
+          happy: aggregatedData.map(item => item.emotions.happy || 0),
+          calm: aggregatedData.map(item => item.emotions.calm || 0),
+          sad: aggregatedData.map(item => item.emotions.sad || 0),
+          anxious: aggregatedData.map(item => item.emotions.anxious || 0),
+        }
+      };
+
+      setStats({
+        totalTests: tests.length,
+        timeSeriesData,
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
+      setStats(null);
     }
-  };
-
-  const calculateStats = (tests: any[]): Stats | null => {
-    if (!tests.length) return null;
-
-    const positiveEmotions: Emotion[] = ['happy', 'calm'];
-    const negativeEmotions: Emotion[] = ['sad', 'anxious'];
-    const emotions: Emotion[] = ['happy', 'calm', 'sad', 'anxious'];
-    
-    // Sort tests by timestamp
-    const sortedTests = tests.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-    // Format dates in a more readable way
-    const formatDate = (dateStr: string) => {
-      const date = new Date(dateStr);
-      // If test is from today, show "Today"
-      if (date.toDateString() === new Date().toDateString()) {
-        return 'Today';
-      }
-      // If test is from yesterday, show "Yesterday"
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-      }
-      // For other dates within the last week, show day name
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      if (date > weekAgo) {
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
-      }
-      // For older dates, show month and day
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    };
-    
-    const timeSeriesData = {
-      labels: sortedTests.map(test => formatDate(test.timestamp)),
-      positive: [],
-      negative: [],
-      overall: [],
-      emotions: {
-        happy: [],
-        calm: [],
-        sad: [],
-        anxious: [],
-      },
-    };
-
-    // Calculate averages for each test
-    sortedTests.forEach(test => {
-      let positiveChange = 0;
-      let negativeChange = 0;
-
-      emotions.forEach(emotion => {
-        const pre = test[`pre_${emotion}`] || 0;
-        const post = test[`post_${emotion}`] || 0;
-        const change = ['sad', 'anxious'].includes(emotion) ? 
-          (pre - post) : // Inverted for negative emotions
-          (post - pre);
-        timeSeriesData.emotions[emotion].push(Number(change.toFixed(2)));
-      });
-
-      positiveEmotions.forEach(emotion => {
-        const pre = test[`pre_${emotion}`] || 0;
-        const post = test[`post_${emotion}`] || 0;
-        positiveChange += post - pre;
-      });
-
-      negativeEmotions.forEach(emotion => {
-        const pre = test[`pre_${emotion}`] || 0;
-        const post = test[`post_${emotion}`] || 0;
-        negativeChange += pre - post;
-      });
-
-      const positiveAvg = positiveChange / positiveEmotions.length;
-      const negativeAvg = negativeChange / negativeEmotions.length;
-      
-      timeSeriesData.positive.push(Number(positiveAvg.toFixed(2)));
-      timeSeriesData.negative.push(Number(negativeAvg.toFixed(2)));
-      timeSeriesData.overall.push(Number(((positiveAvg + negativeAvg) / 2).toFixed(2)));
-    });
-
-    // Calculate overall improvements
-    const stats = {
-      totalTests: tests.length,
-      averageImprovement: {} as Record<string, string>,
-      timeSeriesData,
-    };
-
-    [...positiveEmotions, ...negativeEmotions].forEach(emotion => {
-      let totalImprovement = 0;
-      let validTests = 0;
-
-      tests.forEach(test => {
-        const pre = test[`pre_${emotion}`];
-        const post = test[`post_${emotion}`];
-        
-        if (pre !== undefined && post !== undefined) {
-          totalImprovement += negativeEmotions.includes(emotion) ? 
-            (pre - post) : // Inverted for negative emotions
-            (post - pre);
-          validTests++;
-        }
-      });
-
-      stats.averageImprovement[emotion] = validTests ? 
-        (totalImprovement / validTests).toFixed(2) : '0';
-    });
-
-    return stats;
   };
 
   const chartConfig = {
@@ -185,16 +247,31 @@ export default function StatsScreen() {
                 <Ionicons name="chevron-back" size={32} color="white" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-              <View style={styles.content}>
-                <Text style={styles.message}>No test data available yet.</Text>
-              </View>
-            </ScrollView>
+            <View style={styles.content}>
+              <Text style={styles.message}>No test data available yet.</Text>
+            </View>
           </SafeAreaView>
         </LinearGradient>
       </View>
     );
   }
+
+  const TimeFilterButton = ({ filter, label }: { filter: TimeFilter; label: string }) => (
+    <TouchableOpacity
+      style={[
+        styles.filterButton,
+        timeFilter === filter && styles.filterButtonActive,
+      ]}
+      onPress={() => setTimeFilter(filter)}
+    >
+      <Text style={[
+        styles.filterButtonText,
+        timeFilter === filter && styles.filterButtonTextActive,
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -218,26 +295,33 @@ export default function StatsScreen() {
               <Text style={styles.title}>Results</Text>
               <Text style={styles.subtitle}>Total Tests: {stats?.totalTests || 0}</Text>
 
+              <View style={styles.filterContainer}>
+                <TimeFilterButton filter="day" label="Day" />
+                <TimeFilterButton filter="week" label="Week" />
+                <TimeFilterButton filter="month" label="Month" />
+                <TimeFilterButton filter="year" label="Year" />
+              </View>
+
               {stats?.timeSeriesData && (
                 <>
                   <View style={styles.chartContainer}>
                     <Text style={styles.chartTitle}>Emotion Changes Over Time</Text>
                     <LineChart
                       data={{
-                        labels: stats.timeSeriesData.labels || [],
+                        labels: stats.timeSeriesData.labels,
                         datasets: [
                           {
-                            data: stats.timeSeriesData.positive || [],
+                            data: stats.timeSeriesData.positive,
                             color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
                             strokeWidth: 2,
                           },
                           {
-                            data: stats.timeSeriesData.negative || [],
+                            data: stats.timeSeriesData.negative,
                             color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
                             strokeWidth: 2,
                           },
                           {
-                            data: stats.timeSeriesData.overall || [],
+                            data: stats.timeSeriesData.overall,
                             color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
                             strokeWidth: 2,
                           },
@@ -272,10 +356,10 @@ export default function StatsScreen() {
                       </Text>
                       <LineChart
                         data={{
-                          labels: stats.timeSeriesData.labels || [],
+                          labels: stats.timeSeriesData.labels,
                           datasets: [
                             {
-                              data: data || [],
+                              data: data as number[],
                               color: (opacity = 1) => {
                                 const colors = {
                                   happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
@@ -315,11 +399,11 @@ export default function StatsScreen() {
                 <Text style={styles.sectionTitle}>Average Improvements</Text>
                 <BarChart
                   data={{
-                    labels: Object.keys(stats.averageImprovement || {}).map(key => 
+                    labels: ['happy', 'calm', 'sad', 'anxious'].map(key => 
                       key.charAt(0).toUpperCase() + key.slice(1)
                     ),
                     datasets: [{
-                      data: Object.values(stats.averageImprovement || {}).map(Number)
+                      data: [0, 0, 0, 0]
                     }]
                   }}
                   width={width - 40}
@@ -380,6 +464,30 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     alignItems: 'center',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  filterButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  filterButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  filterButtonText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  filterButtonTextActive: {
+    color: 'white',
   },
   title: {
     fontSize: 30,

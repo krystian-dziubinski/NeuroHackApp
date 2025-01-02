@@ -30,17 +30,34 @@ export default function TestScreen() {
       setStage('post');
     } else {
       try {
-        const timestamp = new Date().toISOString();
+        const timestamp = Date.now();
         const testData = {
           timestamp,
-          ...ratings
+          emotions: {
+            happy: ratings['post_happy'] - ratings['pre_happy'],
+            calm: ratings['post_calm'] - ratings['pre_calm'],
+            sad: ratings['post_sad'] - ratings['pre_sad'],
+            anxious: ratings['post_anxious'] - ratings['pre_anxious'],
+          },
+          pre: {
+            happy: ratings['pre_happy'],
+            calm: ratings['pre_calm'],
+            sad: ratings['pre_sad'],
+            anxious: ratings['pre_anxious'],
+          },
+          post: {
+            happy: ratings['post_happy'],
+            calm: ratings['post_calm'],
+            sad: ratings['post_sad'],
+            anxious: ratings['post_anxious'],
+          }
         };
         
-        const existingData = await AsyncStorage.getItem('testResults');
+        const existingData = await AsyncStorage.getItem('tests');
         const allTests = existingData ? JSON.parse(existingData) : [];
         allTests.push(testData);
         
-        await AsyncStorage.setItem('testResults', JSON.stringify(allTests));
+        await AsyncStorage.setItem('tests', JSON.stringify(allTests));
         router.push('/stats');
       } catch (error) {
         console.error('Error saving test:', error);
