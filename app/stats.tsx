@@ -497,29 +497,6 @@ export default function StatsScreen() {
                 </>
               )}
 
-              <View style={styles.statsContainer}>
-                <Text style={styles.sectionTitle}>Average Improvements</Text>
-                <BarChart
-                  data={{
-                    labels: ['motivated', 'compassionate', 'grateful', 'intrigued', 'purposeful', 'contemplated', 'energetic', 'satisfied', 'sad', 'angry', 'frightened', 'disgusted', 'anxious', 'agitated', 'regretful', 'annoyed'].map(key => 
-                      key.charAt(0).toUpperCase() + key.slice(1)
-                    ),
-                    datasets: [{
-                      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                    }]
-                  }}
-                  width={width - 40}
-                  height={220}
-                  chartConfig={{
-                    ...chartConfig,
-                    color: (opacity = 1) => {
-                      return `rgba(52, 152, 219, ${opacity})`;
-                    },
-                  }}
-                  style={styles.chart}
-                  showValuesOnTopOfBars
-                />
-              </View>
 
               <Text style={styles.note}>
                 Positive values indicate improvement in positive emotions or reduction in negative emotions.
