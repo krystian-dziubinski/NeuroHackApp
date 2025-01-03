@@ -14,37 +14,89 @@ interface Stats {
     negative: number[];
     overall: number[];
     emotions: {
-      happy: number[];
-      calm: number[];
+      motivated: number[];
+      compassionate: number[];
+      grateful: number[];
+      intrigued: number[];
+      purposeful: number[];
+      contemplated: number[];
+      energetic: number[];
+      satisfied: number[];
       sad: number[];
+      angry: number[];
+      frightened: number[];
+      disgusted: number[];
       anxious: number[];
+      agitated: number[];
+      regretful: number[];
+      annoyed: number[];
     };
   };
 }
 
-type Emotion = 'happy' | 'calm' | 'sad' | 'anxious';
+type Emotion = 
+  | 'motivated' | 'compassionate' | 'grateful' | 'intrigued' 
+  | 'purposeful' | 'contemplated' | 'energetic' | 'satisfied'
+  | 'sad' | 'angry' | 'frightened' | 'disgusted' 
+  | 'anxious' | 'agitated' | 'regretful' | 'annoyed';
 
 type TimeFilter = 'day' | 'week' | 'month' | 'year';
 
 interface TestData {
   timestamp: number;
   emotions: {
-    happy: number;
-    calm: number;
+    motivated: number;
+    compassionate: number;
+    grateful: number;
+    intrigued: number;
+    purposeful: number;
+    contemplated: number;
+    energetic: number;
+    satisfied: number;
     sad: number;
+    angry: number;
+    frightened: number;
+    disgusted: number;
     anxious: number;
+    agitated: number;
+    regretful: number;
+    annoyed: number;
   };
   pre: {
-    happy: number;
-    calm: number;
+    motivated: number;
+    compassionate: number;
+    grateful: number;
+    intrigued: number;
+    purposeful: number;
+    contemplated: number;
+    energetic: number;
+    satisfied: number;
     sad: number;
+    angry: number;
+    frightened: number;
+    disgusted: number;
     anxious: number;
+    agitated: number;
+    regretful: number;
+    annoyed: number;
   };
   post: {
-    happy: number;
-    calm: number;
+    motivated: number;
+    compassionate: number;
+    grateful: number;
+    intrigued: number;
+    purposeful: number;
+    contemplated: number;
+    energetic: number;
+    satisfied: number;
     sad: number;
+    angry: number;
+    frightened: number;
+    disgusted: number;
     anxious: number;
+    agitated: number;
+    regretful: number;
+    annoyed: number;
   };
 }
 
@@ -94,38 +146,22 @@ const aggregateData = (data: TestData[], filter: TimeFilter) => {
 
   // Aggregate data for each period
   return Object.entries(groupedData).map(([key, items]) => {
-    const avgEmotions: { happy: number; calm: number; sad: number; anxious: number } = {
-      happy: 0,
-      calm: 0,
-      sad: 0,
-      anxious: 0,
+    const avgEmotions: Record<Emotion, number> = {
+      motivated: 0, compassionate: 0, grateful: 0, intrigued: 0,
+      purposeful: 0, contemplated: 0, energetic: 0, satisfied: 0,
+      sad: 0, angry: 0, frightened: 0, disgusted: 0,
+      anxious: 0, agitated: 0, regretful: 0, annoyed: 0
     };
-    const avgPre: { happy: number; calm: number; sad: number; anxious: number } = {
-      happy: 0,
-      calm: 0,
-      sad: 0,
-      anxious: 0,
-    };
-    const avgPost: { happy: number; calm: number; sad: number; anxious: number } = {
-      happy: 0,
-      calm: 0,
-      sad: 0,
-      anxious: 0,
-    };
+    const avgPre: Record<Emotion, number> = { ...avgEmotions };
+    const avgPost: Record<Emotion, number> = { ...avgEmotions };
 
     items.forEach(item => {
-      avgEmotions.happy += item.emotions.happy / items.length;
-      avgEmotions.calm += item.emotions.calm / items.length;
-      avgEmotions.sad += item.emotions.sad / items.length;
-      avgEmotions.anxious += item.emotions.anxious / items.length;
-      avgPre.happy += item.pre.happy / items.length;
-      avgPre.calm += item.pre.calm / items.length;
-      avgPre.sad += item.pre.sad / items.length;
-      avgPre.anxious += item.pre.anxious / items.length;
-      avgPost.happy += item.post.happy / items.length;
-      avgPost.calm += item.post.calm / items.length;
-      avgPost.sad += item.post.sad / items.length;
-      avgPost.anxious += item.post.anxious / items.length;
+      Object.keys(item.emotions).forEach((emotion) => {
+        const e = emotion as Emotion;
+        avgEmotions[e] += item.emotions[e] / items.length;
+        avgPre[e] += item.pre[e] / items.length;
+        avgPost[e] += item.post[e] / items.length;
+      });
     });
 
     return {
@@ -184,27 +220,69 @@ export default function StatsScreen() {
       const timeSeriesData = {
         labels: aggregatedData.map(item => formatDate(item.timestamp, timeFilter)),
         positive: aggregatedData.map(item => {
-          const happy = item.emotions.happy || 0;
-          const calm = item.emotions.calm || 0;
-          return happy + calm;
+          return (
+            item.emotions.motivated +
+            item.emotions.compassionate +
+            item.emotions.grateful +
+            item.emotions.intrigued +
+            item.emotions.purposeful +
+            item.emotions.contemplated +
+            item.emotions.energetic +
+            item.emotions.satisfied
+          ) / 8; // Average of positive emotions
         }),
         negative: aggregatedData.map(item => {
-          const sad = item.emotions.sad || 0;
-          const anxious = item.emotions.anxious || 0;
-          return -(sad + anxious);
+          return -(
+            item.emotions.sad +
+            item.emotions.angry +
+            item.emotions.frightened +
+            item.emotions.disgusted +
+            item.emotions.anxious +
+            item.emotions.agitated +
+            item.emotions.regretful +
+            item.emotions.annoyed
+          ) / 8; // Average of negative emotions
         }),
         overall: aggregatedData.map(item => {
-          const happy = item.emotions.happy || 0;
-          const calm = item.emotions.calm || 0;
-          const sad = item.emotions.sad || 0;
-          const anxious = item.emotions.anxious || 0;
-          return (happy + calm) - (sad + anxious);
+          const positiveAvg = (
+            item.emotions.motivated +
+            item.emotions.compassionate +
+            item.emotions.grateful +
+            item.emotions.intrigued +
+            item.emotions.purposeful +
+            item.emotions.contemplated +
+            item.emotions.energetic +
+            item.emotions.satisfied
+          ) / 8;
+          const negativeAvg = (
+            item.emotions.sad +
+            item.emotions.angry +
+            item.emotions.frightened +
+            item.emotions.disgusted +
+            item.emotions.anxious +
+            item.emotions.agitated +
+            item.emotions.regretful +
+            item.emotions.annoyed
+          ) / 8;
+          return positiveAvg - negativeAvg;
         }),
         emotions: {
-          happy: aggregatedData.map(item => item.emotions.happy || 0),
-          calm: aggregatedData.map(item => item.emotions.calm || 0),
-          sad: aggregatedData.map(item => item.emotions.sad || 0),
-          anxious: aggregatedData.map(item => item.emotions.anxious || 0),
+          motivated: aggregatedData.map(item => item.emotions.motivated),
+          compassionate: aggregatedData.map(item => item.emotions.compassionate),
+          grateful: aggregatedData.map(item => item.emotions.grateful),
+          intrigued: aggregatedData.map(item => item.emotions.intrigued),
+          purposeful: aggregatedData.map(item => item.emotions.purposeful),
+          contemplated: aggregatedData.map(item => item.emotions.contemplated),
+          energetic: aggregatedData.map(item => item.emotions.energetic),
+          satisfied: aggregatedData.map(item => item.emotions.satisfied),
+          sad: aggregatedData.map(item => item.emotions.sad),
+          angry: aggregatedData.map(item => item.emotions.angry),
+          frightened: aggregatedData.map(item => item.emotions.frightened),
+          disgusted: aggregatedData.map(item => item.emotions.disgusted),
+          anxious: aggregatedData.map(item => item.emotions.anxious),
+          agitated: aggregatedData.map(item => item.emotions.agitated),
+          regretful: aggregatedData.map(item => item.emotions.regretful),
+          annoyed: aggregatedData.map(item => item.emotions.annoyed)
         }
       };
 
@@ -362,10 +440,22 @@ export default function StatsScreen() {
                               data: data as number[],
                               color: (opacity = 1) => {
                                 const colors = {
-                                  happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                                  calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                  motivated: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                  compassionate: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                  grateful: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                                  intrigued: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                                  purposeful: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                  contemplated: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                  energetic: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                                  satisfied: `rgba(230, 126, 34, ${opacity})`, // #e67e22
                                   sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                                  anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                                  angry: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                                  frightened: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                  disgusted: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                                  anxious: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                                  agitated: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                                  regretful: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                                  annoyed: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
                                 };
                                 return colors[emotion as keyof typeof colors];
                               },
@@ -379,10 +469,22 @@ export default function StatsScreen() {
                           ...chartConfig,
                           color: (opacity = 1) => {
                             const colors = {
-                              happy: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
-                              calm: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                              motivated: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                              compassionate: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                              grateful: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                              intrigued: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                              purposeful: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                              contemplated: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                              energetic: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                              satisfied: `rgba(230, 126, 34, ${opacity})`, // #e67e22
                               sad: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
-                              anxious: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                              angry: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                              frightened: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                              disgusted: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
+                              anxious: `rgba(142, 68, 173, ${opacity})`,    // #8e44ad
+                              agitated: `rgba(230, 126, 34, ${opacity})`, // #e67e22
+                              regretful: `rgba(241, 196, 15, ${opacity})`,  // #f1c40f
+                              annoyed: `rgba(39, 174, 96, ${opacity})`,    // #27ae60
                             };
                             return colors[emotion as keyof typeof colors];
                           },
@@ -399,11 +501,11 @@ export default function StatsScreen() {
                 <Text style={styles.sectionTitle}>Average Improvements</Text>
                 <BarChart
                   data={{
-                    labels: ['happy', 'calm', 'sad', 'anxious'].map(key => 
+                    labels: ['motivated', 'compassionate', 'grateful', 'intrigued', 'purposeful', 'contemplated', 'energetic', 'satisfied', 'sad', 'angry', 'frightened', 'disgusted', 'anxious', 'agitated', 'regretful', 'annoyed'].map(key => 
                       key.charAt(0).toUpperCase() + key.slice(1)
                     ),
                     datasets: [{
-                      data: [0, 0, 0, 0]
+                      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                     }]
                   }}
                   width={width - 40}

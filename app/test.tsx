@@ -6,15 +6,30 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 const emotions = [
-  { label: 'Sad', key: 'sad' },
-  { label: 'Happy', key: 'happy' },
-  { label: 'Anxious', key: 'anxious' },
-  { label: 'Calm', key: 'calm' },
+  // Positive emotions
+  { label: 'Motivated', key: 'motivated', category: 'positive' },
+  { label: 'Compassionate', key: 'compassionate', category: 'positive' },
+  { label: 'Grateful', key: 'grateful', category: 'positive' },
+  { label: 'Intrigued', key: 'intrigued', category: 'positive' },
+  { label: 'Purposeful', key: 'purposeful', category: 'positive' },
+  { label: 'Contemplated', key: 'contemplated', category: 'positive' },
+  { label: 'Energetic', key: 'energetic', category: 'positive' },
+  { label: 'Satisfied', key: 'satisfied', category: 'positive' },
+  
+  // Negative emotions
+  { label: 'Sad', key: 'sad', category: 'negative' },
+  { label: 'Angry', key: 'angry', category: 'negative' },
+  { label: 'Frightened', key: 'frightened', category: 'negative' },
+  { label: 'Disgusted', key: 'disgusted', category: 'negative' },
+  { label: 'Anxious', key: 'anxious', category: 'negative' },
+  { label: 'Agitated', key: 'agitated', category: 'negative' },
+  { label: 'Regretful', key: 'regretful', category: 'negative' },
+  { label: 'Annoyed', key: 'annoyed', category: 'negative' },
 ];
 
 export default function TestScreen() {
-  const [stage, setStage] = useState('pre');
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [stage, setStage] = useState<'pre' | 'intervention' | 'post'>('pre');
+  const [ratings, setRatings] = useState<{ [key: string]: number }>({});
 
   const handleRate = (emotion: string, rating: number) => {
     setRatings(prev => ({
@@ -33,34 +48,41 @@ export default function TestScreen() {
         const timestamp = Date.now();
         const testData = {
           timestamp,
-          emotions: {
-            happy: ratings['post_happy'] - ratings['pre_happy'],
-            calm: ratings['post_calm'] - ratings['pre_calm'],
-            sad: ratings['post_sad'] - ratings['pre_sad'],
-            anxious: ratings['post_anxious'] - ratings['pre_anxious'],
-          },
-          pre: {
-            happy: ratings['pre_happy'],
-            calm: ratings['pre_calm'],
-            sad: ratings['pre_sad'],
-            anxious: ratings['pre_anxious'],
-          },
-          post: {
-            happy: ratings['post_happy'],
-            calm: ratings['post_calm'],
-            sad: ratings['post_sad'],
-            anxious: ratings['post_anxious'],
+          emotions: Object.fromEntries(
+            emotions.map(emotion => [
+              emotion.key,
+              (ratings[`post_${emotion.key}`] || 0) - (ratings[`pre_${emotion.key}`] || 0)
+            ])
+          ),
+          pre: Object.fromEntries(
+            emotions.map(emotion => [
+              emotion.key,
+              ratings[`pre_${emotion.key}`] || 0
+            ])
+          ),
+          post: Object.fromEntries(
+            emotions.map(emotion => [
+              emotion.key,
+              ratings[`post_${emotion.key}`] || 0
+            ])
+          ),
+          categories: {
+            positive: emotions
+              .filter(e => e.category === 'positive')
+              .map(e => e.key),
+            negative: emotions
+              .filter(e => e.category === 'negative')
+              .map(e => e.key)
           }
         };
         
-        const existingData = await AsyncStorage.getItem('tests');
-        const allTests = existingData ? JSON.parse(existingData) : [];
-        allTests.push(testData);
+        const existingTestsString = await AsyncStorage.getItem('tests');
+        const existingTests = existingTestsString ? JSON.parse(existingTestsString) : [];
+        await AsyncStorage.setItem('tests', JSON.stringify([...existingTests, testData]));
         
-        await AsyncStorage.setItem('tests', JSON.stringify(allTests));
-        router.push('/stats');
+        router.replace('/stats');
       } catch (error) {
-        console.error('Error saving test:', error);
+        console.error('Error saving test data:', error);
       }
     }
   };
@@ -87,6 +109,10 @@ export default function TestScreen() {
     );
   };
 
+  const allEmotionsRated = emotions.every(
+    emotion => ratings[`${stage}_${emotion.key}`]
+  );
+
   if (stage === 'intervention') {
     return (
       <View style={styles.container}>
@@ -100,23 +126,22 @@ export default function TestScreen() {
             <View style={styles.headerContainer}>
               <TouchableOpacity 
                 style={styles.backButton}
-                onPress={() => router.back()}
+                onPress={() => router.replace('/')}
               >
                 <Ionicons name="chevron-back" size={32} color="white" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-              <View style={styles.content}>
-                <Text style={styles.title}>Time for Intervention</Text>
-                <Text style={styles.instructions}>
-                  Take a moment to watch an uplifting video or do a calming activity of your choice.
-                  When you're ready, proceed to rate your emotions again.
-                </Text>
-                <TouchableOpacity style={styles.button} onPress={handleNext}>
-                  <Text style={styles.buttonText}>I'm Ready</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+            <View style={styles.content}>
+              <Text style={styles.title}>Intervention</Text>
+              <Text style={styles.instructions}>
+                Take a moment to breathe deeply and reflect on your emotions.
+                {'\n\n'}
+                When you're ready, we'll ask about your emotions again.
+              </Text>
+              <TouchableOpacity style={styles.button} onPress={handleNext}>
+                <Text style={styles.buttonText}>I'm Ready</Text>
+              </TouchableOpacity>
+            </View>
           </SafeAreaView>
         </LinearGradient>
       </View>
@@ -135,7 +160,7 @@ export default function TestScreen() {
           <View style={styles.headerContainer}>
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => router.replace('/')}
             >
               <Ionicons name="chevron-back" size={32} color="white" />
             </TouchableOpacity>
@@ -146,17 +171,34 @@ export default function TestScreen() {
                 {stage === 'pre' ? 'How do you feel right now?' : 'How do you feel after the intervention?'}
               </Text>
               
-              {emotions.map((emotion) => (
-                <View key={emotion.key} style={styles.emotionContainer}>
-                  <Text style={styles.emotionText}>{emotion.label}</Text>
-                  {renderRatingButtons(emotion)}
-                </View>
-              ))}
+              <View style={styles.emotionsSection}>
+                <Text style={styles.sectionTitle}>Positive Emotions</Text>
+                {emotions
+                  .filter(e => e.category === 'positive')
+                  .map((emotion) => (
+                    <View key={emotion.key} style={styles.emotionContainer}>
+                      <Text style={styles.emotionText}>{emotion.label}</Text>
+                      {renderRatingButtons(emotion)}
+                    </View>
+                  ))}
+              </View>
+
+              <View style={styles.emotionsSection}>
+                <Text style={styles.sectionTitle}>Negative Emotions</Text>
+                {emotions
+                  .filter(e => e.category === 'negative')
+                  .map((emotion) => (
+                    <View key={emotion.key} style={styles.emotionContainer}>
+                      <Text style={styles.emotionText}>{emotion.label}</Text>
+                      {renderRatingButtons(emotion)}
+                    </View>
+                  ))}
+              </View>
 
               <TouchableOpacity 
-                style={[styles.button, !Object.keys(ratings).length && styles.buttonDisabled]}
+                style={[styles.button, !allEmotionsRated && styles.buttonDisabled]}
                 onPress={handleNext}
-                disabled={!Object.keys(ratings).length}
+                disabled={!allEmotionsRated}
               >
                 <Text style={styles.buttonText}>Next</Text>
               </TouchableOpacity>
@@ -197,34 +239,52 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
+    paddingBottom: 40,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
+  emotionsSection: {
+    width: '100%',
+    marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#ffffff',
-    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
+    textAlign: 'center',
   },
   instructions: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
+    color: '#ffffff',
     marginBottom: 30,
     lineHeight: 28,
-    color: '#ffffff',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   emotionContainer: {
-    marginBottom: 25,
+    marginBottom: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 15,
     padding: 15,
@@ -232,23 +292,24 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   emotionText: {
-    fontSize: 24,
-    marginBottom: 15,
+    fontSize: 16,
+    marginBottom: 10,
     color: '#ffffff',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 2,
   },
   ratingContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 5,
   },
   ratingButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -259,35 +320,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   ratingText: {
-    fontSize: 20,
-    color: '#ffffff',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   selectedRatingText: {
     color: '#1a2a6c',
+    fontWeight: 'bold',
     textShadowColor: 'rgba(255, 255, 255, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   button: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    padding: 15,
-    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
     marginTop: 20,
-    marginBottom: 40,
+    minWidth: 200,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   buttonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    opacity: 0.5,
   },
   buttonText: {
-    color: 'white',
+    color: '#ffffff',
+    fontSize: 18,
     textAlign: 'center',
-    fontSize: 20,
     fontWeight: '600',
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 1 },
